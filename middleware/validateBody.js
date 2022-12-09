@@ -41,6 +41,15 @@ const validateSignUp = (req, res, next) => {
         });
         return;
     }
+    if (!req.body.address || !req.body.address.city || !req.body.address.state  || !req.body.address.country) {
+
+        res.status(StatusCodes.FORBIDDEN).send({
+            status: StatusCodes.FORBIDDEN,
+            response: ReasonPhrases.FORBIDDEN,
+            message: "Fill the address : city | state | country"
+        });
+        return;
+    }
     else {
         let emailExist = `SELECT * FROM user WHERE email=?`;
         db.get(emailExist, [req.body.email], (err, email) => {

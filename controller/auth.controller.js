@@ -10,27 +10,43 @@ exports.signUp = (req, res) => {
         name: req.body.name,
         email: req.body.email,
         mobile: req.body.mobile,
-        password: bcrypt.hashSync(req.body.password, 8)
+        password: bcrypt.hashSync(req.body.password, 8),
+        address: {
+            city: req.body.address.city,
+            state: req.body.address.state,
+            country: req.body.address.country
+        }
     }
 
-    let sql = `INSERT INTO user (name, email, mobile,password) VALUES (?,?,?,?)`
-    let values = [userObj.name, userObj.email, userObj.mobile, userObj.password];
+    let user = `INSERT INTO user (name, email, mobile, password, address) VALUES (?,?,?,?,?)`
+    let address = `INSERT INTO address (city, state, country) VALUES (?,?,?)`
 
-    db.all(sql, values, function (err, result) {
-        if (err) {
-            res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
-            return;
+    db.run(address, [userObj.address.city, userObj.address.state, userObj.address.country],
+        function (err) {
+            if (err) {
+                res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
+                return;
+            }
+            else {
+                db.run(user, [userObj.name, userObj.email, userObj.mobile, userObj.password, this.lastID], function (err) {
+                    if (err) {
+                        res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
+                        return;
+                    }
+                    else {
+                        console.log('User Created', this);
+                        res.status(StatusCodes.CREATED).send({
+                            status: StatusCodes.CREATED,
+                            response: ReasonPhrases.CREATED,
+                            data: this.lastID
+                        })
+                    }
+                })
+            }
         }
-        else {
-            console.log('User Created', result);
-            res.status(StatusCodes.CREATED).send({
-                status: StatusCodes.CREATED,
-                response: ReasonPhrases.CREATED,
-                data: result
-            })
+    )
 
-        }
-    })
+
 
 }
 
