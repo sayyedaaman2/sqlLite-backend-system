@@ -28,7 +28,7 @@ exports.signUp = (req, res) => {
                 return;
             }
             else {
-                db.run(user, [userObj.name, userObj.email, userObj.mobile, userObj.password, this.lastID], function (err) {
+                db.get(user, [userObj.name, userObj.email, userObj.mobile, userObj.password, this.lastID], function (err) {
                     if (err) {
                         res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
                         return;
@@ -38,7 +38,7 @@ exports.signUp = (req, res) => {
                         res.status(StatusCodes.CREATED).send({
                             status: StatusCodes.CREATED,
                             response: ReasonPhrases.CREATED,
-                            data: this.lastID
+                            id: this.lastID
                         })
                     }
                 })
@@ -57,7 +57,7 @@ exports.signIn = (req, res) => {
         password: req.body.password
     }
 
-    let sql = `SELECT * FROM user WHERE email= ?`;
+    let sql = `SELECT * FROM user inner join address on user.address=address.id WHERE email=?`;
     let params = [userObj.email];
     db.get(sql, params, (err, user) => {
 
@@ -204,6 +204,61 @@ exports.deleteUser = (req, res) => {
                 response: ReasonPhrases.OK
             })
             return;
+
+        }
+    })
+}
+
+exports.getAllUserwithAdd = (req, res) => {
+    let sql = `SELECT user.name, user.email, user.mobile , address.city, address.state, address.country FROM user inner join address on user.address=address.id`;
+    let params = [];
+    db.all(sql, params, (err, users) => {
+        if (err) {
+            res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
+            return;
+        } else {
+            if (users) {
+                res.status(StatusCodes.OK).send({
+                    status: StatusCodes.OK,
+                    response: ReasonPhrases.OK,
+                    data: users
+                })
+                return;
+            } else {
+                res.status(StatusCodes.NOT_FOUND).send({
+                    status: StatusCodes.NOT_FOUND,
+                    response: ReasonPhrases.NOT_FOUND
+                });
+                return;
+            }
+
+        }
+    })
+}
+
+exports.getUserwithAdd = (req, res)=>{
+    let sql = `SELECT user.name, user.email, user.mobile , address.city, address.state, address.country FROM user inner join address on user.address=address.id WHERE user.id = ?`;
+    console.log(req.params)
+    let params = [req.params.id];
+    db.all(sql, params, (err, users) => {
+        if (err) {
+            res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
+            return;
+        } else {
+            if (users) {
+                res.status(StatusCodes.OK).send({
+                    status: StatusCodes.OK,
+                    response: ReasonPhrases.OK,
+                    data: users
+                })
+                return;
+            } else {
+                res.status(StatusCodes.NOT_FOUND).send({
+                    status: StatusCodes.NOT_FOUND,
+                    response: ReasonPhrases.NOT_FOUND
+                });
+                return;
+            }
 
         }
     })
